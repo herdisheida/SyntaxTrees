@@ -4,12 +4,20 @@
 
 using std::cerr; // console error output
 using std::cout; // console output
+using std::cin;  // console input
+
 using std::endl; // newline
 using std::string;
 
-static std::string read_all(std::istream& in) {
-    // TODO: read all input from stream, return as string
-    return "NULL"; // placeholder
+
+
+static string read_stdin(std::istream& in) {
+    /* ignor whitespace, newline, tab, etc */
+    string result;
+    char c;
+    while (in >> c)
+        result += c;
+    return result;
 }
 
 void print_usage(const char* program_name) {
@@ -58,11 +66,12 @@ int main(int argc, char** argv) {
         }
 
         if (argc == 2) {  // get expr from stdin
-            std::string input = read_all(std::cin);
+            string input = read_stdin(cin);
             // TODO: build AST from input, write to argv[1]
             // 1. read input from stdin
             // 2. build AST (using syntax tree structure) - todo búa til structureið
             // 3. write to argv[1] (ast output file)
+            cout << "Input read from stdin: " << input << endl;
         }
 
 
