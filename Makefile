@@ -1,7 +1,7 @@
 CXX      := clang++
-CXXFLAGS := -std=c++98 -Wall -Wextra -pedantic
+CXXFLAGS := -std=c++23 -Wall -Wextra -pedantic # newest version
 TARGET   := program
-BUILD_NAME := Self Balancing Binary Search Tree
+BUILD_NAME := Abstract Syntax Tree
 
 SRCS := main.cpp
 OBJS := $(SRCS:.cpp=.o)
