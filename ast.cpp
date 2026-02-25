@@ -10,20 +10,40 @@ using std::string;
 using std::int64_t;
 using std::size_t;
 
-struct OpInfo {
-    char symbol;
-    ast::Node::Kind kind;
-};
 
-static const OpInfo ops[] = {
-    {'+', ast::Node::Kind::Add},
-    {'-', ast::Node::Kind::Sub},
-    {'*', ast::Node::Kind::Mul},
-    {'/', ast::Node::Kind::Div}
-};
 
 
 namespace ast {
+
+    // ---------- operator info ----------
+    struct OpInfo {
+        char symbol;
+        Node::Kind kind;
+    };
+
+    static const OpInfo ops[] = {
+        {'+', Node::Kind::Add},
+        {'-', Node::Kind::Sub},
+        {'*', Node::Kind::Mul},
+        {'/', Node::Kind::Div}
+    };
+
+    static bool op_to_kind(char op, Node::Kind& out_kind) {
+        for (const auto& info : ops) {
+            if (info.symbol == op) {
+                out_kind = info.kind;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static char kind_to_op(Node::Kind k) {
+        for (const auto& info : ops) {
+            if (info.kind == k) return info.symbol;
+        }
+        throw std::runtime_error("serialize: unknown operator kind");
+    }
 
     // ---------- build Nodes (operators and numbers) ----------
     unique_ptr<Node> Node::make_number(int64_t v) {
@@ -148,8 +168,8 @@ namespace ast {
             out << n.value;
             return;
         }
-        char op = n.kind == Node::Kind::Add ? '+' : n.kind == Node::Kind::Sub ? '-' : n.kind == Node::Kind::Mul ? '*' : '/'; // + - * /
-
+        char op = kind_to_op(n.kind);
+        
         out << "(" << op << " ";
         serialize_rec(out, *n.left);
         out << " ";
@@ -192,8 +212,11 @@ namespace ast {
                 if (peek() == '(') {
                     get(); // '('
                     skip_ws();
+
                     char op = get(); // '+' 'or '-' or '*'
-                    if (op != '+' && op != '-' && op != '*' && op != '/') throw std::runtime_error("deserialize: expected + or - or * or /");
+                    Node::Kind k;
+                    if (!op_to_kind(op, k)) throw std::runtime_error("deserialize: expected one of + - * /");
+
                     skip_ws();
                     auto a = parse_node();
                     skip_ws();
@@ -202,16 +225,7 @@ namespace ast {
                     if (get() != ')') throw std::runtime_error("deserialize: expected ')'");
 
                     // create operator node
-                    if (op == '+') {
-                        return Node::make_op(Node::Kind::Add, std::move(a), std::move(b));
-                    } else if (op == '-') {
-                        return Node::make_op(Node::Kind::Sub, std::move(a), std::move(b));
-                    } else if (op == '*') {
-                        return Node::make_op(Node::Kind::Mul, std::move(a), std::move(b));
-                    } else { // op == '/'
-                        return Node::make_op(Node::Kind::Div, std::move(a), std::move(b));
-                    }
-                    return nullptr; // should never reach here
+                    return Node::make_op(k, std::move(a), std::move(b));
                 }
                 return Node::make_number(parse_number());
             }
