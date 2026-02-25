@@ -6,25 +6,20 @@ TODO
 
 ## Compile and run program
 
-1. Go to the projcet's root directory:
-
-```bash
-cd <path-to-directory>
-```
-
-2. Compile:
+1. Compile:
 
 ```bash
 make
 ```
 
-3. Run:
+2. Run:
 
-```bash
-./program
-```
+| Build AST + write to file                         | Evaluate AST + print ouput    |
+| ------------------------------------------------- | ----------------------------- |
+| `./program <ast-out-file> <expr-in-file>`         | `./program --eval <ast-file>` |
+| `./program <ast-out-file> (read expr from stdin)` |                               |
 
-#### Clean
+### Clean
 
 Remove .o files and the executable:
 
