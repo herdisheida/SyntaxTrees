@@ -10,6 +10,7 @@ using std::string;
 using std::int64_t;
 using std::size_t;
 
+
 namespace ast {
 
     // ---------- build Nodes (operators and numbers) ----------
@@ -34,6 +35,7 @@ namespace ast {
         switch (root.kind) {
             case Node::Kind::Number: return root.value;
             case Node::Kind::Add:    return evaluate(*root.left) + evaluate(*root.right);
+            case Node::Kind::Sub:    return evaluate(*root.left) - evaluate(*root.right);
             case Node::Kind::Mul:    return evaluate(*root.left) * evaluate(*root.right);
         }
         throw std::runtime_error("evaluate: unknown node kind");
@@ -81,7 +83,7 @@ namespace ast {
     // ---------- parse_expression (build AST: expression -> AST) ----------
     /* precedence order:
         0. lowest
-        1. +
+        1. + and -
         2. *
         3. numbers
         4. highest
@@ -96,6 +98,13 @@ namespace ast {
             auto L = parse_rec(s.substr(0, k));
             auto R = parse_rec(s.substr(k + 1));
             return Node::make_op(Node::Kind::Add, std::move(L), std::move(R));
+        }
+
+        k = find_op_at_depth_0(s, '-');
+        if (k != -1) {  // '-' found
+            auto L = parse_rec(s.substr(0, k));
+            auto R = parse_rec(s.substr(k + 1));
+            return Node::make_op(Node::Kind::Sub, std::move(L), std::move(R));
         }
 
         // then split on '*'
@@ -128,7 +137,9 @@ namespace ast {
             out << n.value;
             return;
         }
-        out << "(" << (n.kind == Node::Kind::Add ? "+" : "*") << " ";
+        char op = n.kind == Node::Kind::Add ? '+' : n.kind == Node::Kind::Sub ? '-' : '*'; // + - *
+
+        out << "(" << op << " ";
         serialize_rec(out, *n.left);
         out << " ";
         serialize_rec(out, *n.right);
@@ -170,15 +181,24 @@ namespace ast {
                 if (peek() == '(') {
                     get(); // '('
                     skip_ws();
-                    char op = get(); // '+' or '*'
-                    if (op != '+' && op != '*') throw std::runtime_error("deserialize: expected + or *");
+                    char op = get(); // '+' 'or '-' or '*'
+                    if (op != '+' && op != '-' && op != '*') throw std::runtime_error("deserialize: expected + or - or *");
                     skip_ws();
                     auto a = parse_node();
                     skip_ws();
                     auto b = parse_node();
                     skip_ws();
                     if (get() != ')') throw std::runtime_error("deserialize: expected ')'");
-                    return Node::make_op(op == '+' ? Node::Kind::Add : Node::Kind::Mul, std::move(a), std::move(b));
+
+                    // create operator node
+                    if (op == '+') {
+                        return Node::make_op(Node::Kind::Add, std::move(a), std::move(b));
+                    } else if (op == '-') {
+                        return Node::make_op(Node::Kind::Sub, std::move(a), std::move(b));
+                    } else { // op == '*'
+                        return Node::make_op(Node::Kind::Mul, std::move(a), std::move(b));
+                    }
+                    return nullptr; // should never reach here
                 }
                 return Node::make_number(parse_number());
             }

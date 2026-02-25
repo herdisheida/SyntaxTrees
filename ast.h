@@ -9,7 +9,7 @@ namespace ast {
 
     struct Node {
         // TODO add more operators later fyrir bonus
-        enum class Kind { Number, Add, Mul }; // number + operators[+,-]
+        enum class Kind { Number, Add, Sub, Mul }; // number + operators[+, -, *]
 
         Kind kind;
         std::int64_t value; // used only if Number
