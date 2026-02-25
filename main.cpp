@@ -80,14 +80,8 @@ int main(int argc, char** argv) {
         // ---------- build AST mode ----------
         // 1. get expression string
         string input;
-        if (argc == 3) {
-            // get expr from file
-            input = read_file(argv[2]);
-        }
-        if (argc == 2) {
-            // get expr from stdin
-            input = read_stdin(cin);
-        }
+        if (argc == 3) input = read_file(argv[2]); // read from file
+        if (argc == 2) input = read_stdin(cin); // read from stdin
 
         // 2. build AST from input expr
         auto root = ast::parse_expression(input);
