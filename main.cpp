@@ -47,6 +47,12 @@ static string read_file(const char* filename) {
     }
 }
 
+void evaluate_AST(const char* filename) {
+    string ast_input = read_file(filename);
+    cout << "AST read from file (" << filename << "): " << ast_input << endl;
+    auto root = ast::deserialize(ast_input);
+    cout << "Result: " << ast::evaluate(*root) << endl;
+}
 
 void print_usage(const char* program_name) {
     cerr << "Usage:" << endl << endl;
@@ -57,12 +63,6 @@ void print_usage(const char* program_name) {
     cerr << "    " << program_name << " --eval <ast-file>" << endl;
 }
 
-void evaluate_AST(const char* filename) {
-    string ast_input = read_file(filename);
-    cout << "AST read from file (" << filename << "): " << ast_input << endl;
-    auto root = ast::deserialize(ast_input);
-    cout << "Result: " << ast::evaluate(*root) << endl;
-}
 
 int main(int argc, char** argv) {
     try {
