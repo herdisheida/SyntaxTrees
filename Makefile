@@ -3,7 +3,7 @@ CXXFLAGS := -std=c++23 -Wall -Wextra -pedantic # newest version
 TARGET   := program
 BUILD_NAME := Abstract Syntax Tree
 
-SRCS := main.cpp
+SRCS := main.cpp ast.cpp
 OBJS := $(SRCS:.cpp=.o)
 
 all: $(TARGET) info
