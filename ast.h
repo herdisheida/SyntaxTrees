@@ -8,7 +8,8 @@
 namespace ast {
 
     struct Node {
-        enum class Kind { Number, Add, Mul };
+        // TODO add more operators later fyrir bonus
+        enum class Kind { Number, Add, Mul }; // number + operators[+,-]
 
         Kind kind;
         std::int64_t value; // used only if Number
