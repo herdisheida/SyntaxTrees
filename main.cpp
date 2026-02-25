@@ -83,12 +83,12 @@ int main(int argc, char** argv) {
         if (argc == 3) {
             // get expr from file
             input = read_file(argv[2]);
-            cout << "Input read from file (" << argv[2] << "): " << input;
+            cout << "Input read from file (" << argv[2] << "): " << input << endl;
         }
         if (argc == 2) {
             // get expr from stdin
             input = read_stdin(cin);
-            cout << "Input read from stdin: " << input;
+            cout << "Input read from stdin: " << input << endl;
         }
 
         // 2. build AST from input expr

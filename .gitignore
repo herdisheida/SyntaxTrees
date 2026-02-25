@@ -1,3 +1,4 @@
 *.o
 main.o
 program
+ast.tree
