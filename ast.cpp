@@ -37,6 +37,11 @@ namespace ast {
             case Node::Kind::Add:    return evaluate(*root.left) + evaluate(*root.right);
             case Node::Kind::Sub:    return evaluate(*root.left) - evaluate(*root.right);
             case Node::Kind::Mul:    return evaluate(*root.left) * evaluate(*root.right);
+            case Node::Kind::Div:    {
+                int64_t divisor = evaluate(*root.right); // neðri talan í deilingu
+                if (divisor == 0) throw std::runtime_error("evaluate: division by zero");
+                return evaluate(*root.left) / divisor;
+            }
         }
         throw std::runtime_error("evaluate: unknown node kind");
     }
@@ -100,6 +105,7 @@ namespace ast {
             return Node::make_op(Node::Kind::Add, std::move(L), std::move(R));
         }
 
+        // split on '-'
         k = find_op_at_depth_0(s, '-');
         if (k != -1) {  // '-' found
             auto L = parse_rec(s.substr(0, k));
@@ -110,9 +116,20 @@ namespace ast {
         // then split on '*'
         k = find_op_at_depth_0(s, '*');
         if (k != -1) {  // '*' found
+            if (k == 0) throw std::runtime_error("parse: missing left operand for '*': " + s);
+            if (k == (int)s.size() - 1) throw std::runtime_error("parse: missing right operand for '*': " + s);
+
             auto L = parse_rec(s.substr(0, k));
             auto R = parse_rec(s.substr(k + 1));
             return Node::make_op(Node::Kind::Mul, std::move(L), std::move(R));
+        }
+
+        // then split on '/'
+        k = find_op_at_depth_0(s, '/');
+        if (k != -1) {  // '/' found
+            auto L = parse_rec(s.substr(0, k));
+            auto R = parse_rec(s.substr(k + 1));
+            return Node::make_op(Node::Kind::Div, std::move(L), std::move(R));
         }
 
         // otherwise must be a number
@@ -137,7 +154,7 @@ namespace ast {
             out << n.value;
             return;
         }
-        char op = n.kind == Node::Kind::Add ? '+' : n.kind == Node::Kind::Sub ? '-' : '*'; // + - *
+        char op = n.kind == Node::Kind::Add ? '+' : n.kind == Node::Kind::Sub ? '-' : n.kind == Node::Kind::Mul ? '*' : '/'; // + - * /
 
         out << "(" << op << " ";
         serialize_rec(out, *n.left);
@@ -182,7 +199,7 @@ namespace ast {
                     get(); // '('
                     skip_ws();
                     char op = get(); // '+' 'or '-' or '*'
-                    if (op != '+' && op != '-' && op != '*') throw std::runtime_error("deserialize: expected + or - or *");
+                    if (op != '+' && op != '-' && op != '*' && op != '/') throw std::runtime_error("deserialize: expected + or - or * or /");
                     skip_ws();
                     auto a = parse_node();
                     skip_ws();
@@ -195,8 +212,10 @@ namespace ast {
                         return Node::make_op(Node::Kind::Add, std::move(a), std::move(b));
                     } else if (op == '-') {
                         return Node::make_op(Node::Kind::Sub, std::move(a), std::move(b));
-                    } else { // op == '*'
+                    } else if (op == '*') {
                         return Node::make_op(Node::Kind::Mul, std::move(a), std::move(b));
+                    } else { // op == '/'
+                        return Node::make_op(Node::Kind::Div, std::move(a), std::move(b));
                     }
                     return nullptr; // should never reach here
                 }
