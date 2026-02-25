@@ -12,17 +12,17 @@ make
 
 2. Run:
 
-| Build AST + write to file                         | Evaluate AST + print ouput               |
+- **When building AST**: you can choose to read the expression from a file or from standard input. If you choose to read from standard input, you can type the expression directly into the terminal and press Enter.
+- **When evaluating AST**: you need to provide the AST file that was generated in the previous step. The program will read the AST from the file, evaluate it, and print the output to the terminal.
+
+| Build AST                                         | Evaluate AST                             |
 | ------------------------------------------------- | ---------------------------------------- |
 | `./program <ast-out-file> <expr-in-file>`         | `./program --eval <ast-file>`            |
 | `./program <ast-out-file> (read expr from stdin)` | `./program --eval <ast-file> <var-file>` |
 
-<ast-out-file> : The file to which the AST will be written. If the file already exists, it will be overwritten.
-<expr-in-file> : The file from which the expression will be read. If the file does not exist, an error will occur.
-<var-file> : The file from which the variable values will be read. If the file does not exist, it will be assumed that there are no variables in the expression. (throw error if there are variables in the expression but no var-file is provided)
-
-- When building AST: you can choose to read the expression from a file or from standard input. If you choose to read from standard input, you can type the expression directly into the terminal and press Enter.
-- When evaluating AST: you need to provide the AST file that was generated in the previous step. The program will read the AST from the file, evaluate it, and print the output to the terminal.
+- **&lt;ast-out-file&gt;** : Output file - AST string representation. If the file already exists, it will be overwritten.
+- **&lt;expr-in-file&gt;** : Input file - read expression string. If the file does not exist, an error will occur.
+- **&lt;var-file&gt;** : Input file - read variable values. If the file does not exist, an error will occur. If no &lt;var-file&gt; is provided, it will assume there are no variables in the expression.
 
 ### Clean
 
