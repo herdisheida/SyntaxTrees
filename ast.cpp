@@ -10,6 +10,18 @@ using std::string;
 using std::int64_t;
 using std::size_t;
 
+struct OpInfo {
+    char symbol;
+    ast::Node::Kind kind;
+};
+
+static const OpInfo ops[] = {
+    {'+', ast::Node::Kind::Add},
+    {'-', ast::Node::Kind::Sub},
+    {'*', ast::Node::Kind::Mul},
+    {'/', ast::Node::Kind::Div}
+};
+
 
 namespace ast {
 
@@ -85,6 +97,19 @@ namespace ast {
         return -1; // not found
     }
 
+    static unique_ptr<Node> parse_rec(string s); // declare for split
+    static unique_ptr<Node> try_split(const string& s, char op_char, Node::Kind kind) {
+        int k = find_op_at_depth_0(s, op_char);
+        if (k == -1) return nullptr;
+
+        if (k == 0) throw std::runtime_error("parse: missing left operand for '" + string(1, op_char) + "' in: " + s);
+        if (k == (int) s.size() - 1) throw std::runtime_error("parse: missing right operand for '" + string(1, op_char) + "' in: " + s);
+
+        auto L = parse_rec(s.substr(0, k));
+        auto R = parse_rec(s.substr(k + 1));
+
+        return Node::make_op(kind, std::move(L), std::move(R));
+    }
     // ---------- parse_expression (build AST: expression -> AST) ----------
     /* precedence order:
         0. lowest
@@ -97,39 +122,9 @@ namespace ast {
         s = strip_outer_parens(s);
         s = trim_ws(s);
 
-        // split on '+'
-        int k = find_op_at_depth_0(s, '+'); // check lower precedence first
-        if (k != -1) {  // '+' found
-            auto L = parse_rec(s.substr(0, k));
-            auto R = parse_rec(s.substr(k + 1));
-            return Node::make_op(Node::Kind::Add, std::move(L), std::move(R));
-        }
-
-        // split on '-'
-        k = find_op_at_depth_0(s, '-');
-        if (k != -1) {  // '-' found
-            auto L = parse_rec(s.substr(0, k));
-            auto R = parse_rec(s.substr(k + 1));
-            return Node::make_op(Node::Kind::Sub, std::move(L), std::move(R));
-        }
-
-        // then split on '*'
-        k = find_op_at_depth_0(s, '*');
-        if (k != -1) {  // '*' found
-            if (k == 0) throw std::runtime_error("parse: missing left operand for '*': " + s);
-            if (k == (int)s.size() - 1) throw std::runtime_error("parse: missing right operand for '*': " + s);
-
-            auto L = parse_rec(s.substr(0, k));
-            auto R = parse_rec(s.substr(k + 1));
-            return Node::make_op(Node::Kind::Mul, std::move(L), std::move(R));
-        }
-
-        // then split on '/'
-        k = find_op_at_depth_0(s, '/');
-        if (k != -1) {  // '/' found
-            auto L = parse_rec(s.substr(0, k));
-            auto R = parse_rec(s.substr(k + 1));
-            return Node::make_op(Node::Kind::Div, std::move(L), std::move(R));
+        // try splitting on + or - or * or /
+        for (const auto& op : ops) {
+            if (auto node = try_split(s, op.symbol, op.kind)) return node;
         }
 
         // otherwise must be a number
@@ -137,8 +132,7 @@ namespace ast {
 
         int64_t v = 0;
         for (char c : s) {
-            if (!std::isdigit((unsigned char) c))
-                throw std::runtime_error("parse: expected number but got: " + s);
+            if (!std::isdigit((unsigned char) c)) throw std::runtime_error("parse: expected number but got: " + s);
             v = v * 10 + (c - '0');  // string -> ascii -> digit
         }
         return Node::make_number(v);
