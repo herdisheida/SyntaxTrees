@@ -105,21 +105,23 @@ namespace ast {
         return trim_ws(t.substr(1, t.size() - 2));
     }
 
-    /* find an operator at parentheses depth 0 */
-    static int find_op_at_depth_0(const string& s, char op) {
+    /* find last operator at parentheses depth 0  (left-associative operators) */
+    static int find_last_op_at_depth_0(const string& s, char op) {
         int depth = 0;
+        int result = -1;
+    
         for (int i = 0; i < (int) s.size(); i++) {
             char c = s[i];
             if (c == '(') depth++;
             else if (c == ')') depth--;
-            else if (depth == 0 && c == op) return i; // op found at depth 0
+            else if (depth == 0 && c == op) result = i; // last occurance of op found at depth 0
         }
-        return -1; // not found
+        return result; // not found
     }
 
     static unique_ptr<Node> parse_rec(string s); // declare for split
     static unique_ptr<Node> try_split(const string& s, char op_char, Node::Kind kind) {
-        int k = find_op_at_depth_0(s, op_char);
+        int k = find_last_op_at_depth_0(s, op_char);
         if (k == -1) return nullptr;
 
         if (k == 0) throw std::runtime_error("parse: missing left operand for '" + string(1, op_char) + "' in: " + s);
