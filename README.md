@@ -41,7 +41,8 @@ TODO--- klara skyldu stuff í README.md
 2. Modern C++ Tree (5%): the AST is implemented like a tree (left and right children) with smart pointers (std::unique_ptr)
 3. Extra operations (10%): support binary minus, binary division and unary minus
 4. Error handling (~10%): appropriate error msg - file not found, invalid expression (e.g., missing parentheses, invalid characters, etc), invalid AST file format, division by zero
-5. Variables (15%): read variables from file
+5. Variables (15%): allow reading variables from file
+6. AST optimisations (~10%): while building AST pre-calculate: 0 and 1 multiplication, 0 and 1 division , 0 addition and subtraction
 
 [ ] An explanation of the format you store the AST (Abstract Syntax Tree) in that the two versions read/write.
 

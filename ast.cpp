@@ -46,7 +46,17 @@ namespace ast {
         throw std::runtime_error("serialize: unknown operator kind");
     }
 
+
     // ---------- build Nodes (operators and numbers) ----------
+    static bool is_number(const unique_ptr<Node>& n, int64_t v) {
+        return n && n -> kind == Node::Kind::Number && n -> value == v;
+    }
+
+    static bool is_number_node(const unique_ptr<Node>& n) {
+        return n && n -> kind == Node::Kind::Number;
+    }
+
+
     unique_ptr<Node> Node::make_var(const string& var_name) {
         auto n = std::make_unique<Node>();
         n -> kind = Kind::Var;
@@ -63,6 +73,36 @@ namespace ast {
     }
 
     unique_ptr<Node> Node::make_op(Kind k, unique_ptr<Node> a, unique_ptr<Node> b) {
+        // ---------- AST Optimisations ----------
+        if (k == Kind::Mul) {
+            if (is_number(a, 0) || is_number(b, 0)) return make_number(0);
+            if (is_number(a, 1)) return b;
+            if (is_number(b, 1)) return a;
+        }
+        if (k == Kind::Div) {
+            if (is_number(a, 0)) return make_number(0);
+            if (is_number(b, 1)) return a;
+        }
+        if (k == Kind::Add) {
+            if (is_number(a, 0)) return b;
+            if (is_number(b, 0)) return a;
+        }
+        if (k == Kind::Sub) {
+            if (is_number(b, 0)) return a;
+        }
+
+        // ---------- make_number right away ----------
+        if (is_number_node(a) && is_number_node(b)) {
+            if (k == Kind::Add) return make_number(a -> value + b -> value);
+            if (k == Kind::Sub) return make_number(a -> value - b -> value);
+            if (k == Kind::Mul) return make_number(a -> value * b -> value);
+            if (k == Kind::Div) {
+                if (b -> value == 0) throw std::runtime_error("Build AST: division by zero");
+                return make_number(a -> value / b -> value);
+            }
+        }
+ 
+        // ---------- Build Normal Node ----------
         auto n = std::make_unique<Node>();
         n -> kind = k;
         n -> value = 0; // not used
@@ -70,6 +110,7 @@ namespace ast {
         n -> right = std::move(b);  // b becomes owned by n
         return n;
     }
+
 
     // ---------- evaluate ----------
     int64_t evaluate(const Node& root, const VarMap& env) {
