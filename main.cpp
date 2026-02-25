@@ -1,4 +1,4 @@
-// #include "ast.h"
+#include "ast.h"
 #include <iostream>
 #include <string>
 #include <fstream> // file streams
@@ -72,8 +72,12 @@ int main(int argc, char** argv) {
                 // evaluate AST mode
                 // TODO: read from file, evaluate AST, print result
                 // 1. read from argv[2]
+                string ast_input = read_file(argv[2]);
+                cout << "AST read from file (" << argv[2] << "): " << ast_input << endl;
                 // 2. evaluate AST (using syntax tree structure) - todo búa til structureið
+                auto root = ast::deserialize(ast_input);
                 // 3. print result
+                cout << "Result: " << ast::evaluate(*root) << endl;
                 return 0;
             } else {
                 // incorrect num of args for eval mode
@@ -83,10 +87,11 @@ int main(int argc, char** argv) {
         }
 
         // build AST mode
+        string input;
         if (argc == 3) {  // get expr from file
             // TODO: read from file, build AST, write to file
             // 1. read from argv[2] (expr input file)
-            string input = read_file(argv[2]);
+            input = read_file(argv[2]);
             cout << "Input read from file (" << argv[2] << "): " << input << endl;
             // 2. build AST (using syntax tree structure) - todo búa til structureið
             // 3. write to argv[1] (ast output file)
@@ -95,7 +100,7 @@ int main(int argc, char** argv) {
         if (argc == 2) {  // get expr from stdin
             // TODO: build AST from input, write to argv[1]
             // 1. read input from stdin
-            string input = read_stdin(cin);
+            input = read_stdin(cin);
             cout << "Input read from stdin: " << input << endl;
             // 2. build AST (using syntax tree structure) - todo búa til structureið
             // 3. write to argv[1] (ast output file)
@@ -103,7 +108,9 @@ int main(int argc, char** argv) {
 
         // TODO : build AST mode (since they use the same step (excpet reading input))
         // 2. build AST (using syntax tree structure) - todo búa til structureið
-        string ast_representation = "TODO: AST representation here"; // placeholder for AST representation
+        // string ast_representation = "TODO: AST representation here"; // placeholder for AST representation
+        auto root = ast::parse_expression(input);
+        string ast_representation = ast::serialize(*root);
 
         // 3. write to argv[1] (ast output file)
         ofstream output_file(argv[1]);
