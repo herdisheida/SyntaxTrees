@@ -2,8 +2,6 @@
 
 PA3 - Syntax Trees
 
-TODO
-
 ## Compile and run program
 
 1. Compile:
@@ -33,10 +31,12 @@ Remove .o files and the executable:
 make clean
 ```
 
-### What needs to be written in the terminal to compile and run the program, explaining how to run each of the two parts.
+TODO--- klara skyldu stuff í README.md
 
-### What additional features were implemented above the base version, if any.
+[x] What needs to be written in the terminal to compile and run the program, explaining how to run each of the two parts.
 
-### An explanation of the format you store the AST (Abstract Syntax Tree) in that the two versions read/write.
+[ ] What additional features were implemented above the base version, if any.
 
-### Anything else a student wishes to say. Put it here and not in the Canvas comments!
+[ ] An explanation of the format you store the AST (Abstract Syntax Tree) in that the two versions read/write.
+
+[ ] Anything else a student wishes to say. Put it here and not in the Canvas comments!
