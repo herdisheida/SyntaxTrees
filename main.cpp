@@ -35,7 +35,10 @@ static string read_file(const char* filename) {
         // read file char by char
         string result;
         char c;
-        while (file.get(c)) { result += c; }
+        while (file.get(c)) {
+            if (std::isspace((unsigned char)c)) continue;
+            result += c;
+        }
         file.close();
         return result;
     } catch (const std::exception& e) {
