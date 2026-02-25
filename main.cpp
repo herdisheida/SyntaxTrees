@@ -48,10 +48,10 @@ static string read_file(const char* filename) {
 void print_usage(const char* program_name) {
     cerr << "Usage:" << endl << endl;
     cerr << "  " << "Build AST:" << endl;
-    cerr << "    " << program_name << " <ast_out_file> <expr_in_file>" << endl;
-    cerr << "    " << program_name << " <ast_out_file> (read expr from stdin)" << endl;
+    cerr << "    " << program_name << " <ast-out-file> <expr-in-file>" << endl;
+    cerr << "    " << program_name << " <ast-out-file> (read expr from stdin)" << endl;
     cerr << "  " << "Evaluate AST:" << endl;
-    cerr << "    " << program_name << " <ast_file>" << endl;
+    cerr << "    " << program_name << " --eval <ast-file>" << endl;
 }
 
 void evaluate_AST(const char* filename) {
@@ -63,14 +63,6 @@ void evaluate_AST(const char* filename) {
 
 int main(int argc, char** argv) {
     try {
-        /*
-        build AST mode (write to file):
-            1. ./<program-name>   <ast-output-file>   <expr-input-file>
-            2. ./<program-name>   <ast-output-file>   (read from stdin)
-        evaluate AST mode (read from file):
-            1. ./<program-name>   --eval   <ast-file>
-        */
-
         if (argc != 2 && argc != 3) {
             // incorrect num of args
             print_usage(argv[0]);
@@ -82,7 +74,8 @@ int main(int argc, char** argv) {
             return 0;
         }
 
-        // build AST mode
+        // build AST mode:
+        // 1. get input expr
         string input;
         if (argc == 3) {
             // get expr from file
@@ -95,9 +88,7 @@ int main(int argc, char** argv) {
             cout << "Input read from stdin: " << input << endl;
         }
 
-        // TODO : build AST mode (since they use the same step (excpet reading input))
-        // 2. build AST (using syntax tree structure) - todo búa til structureið
-        // string ast_representation = "TODO: AST representation here"; // placeholder for AST representation TODO remove
+        // 2. build AST from input expr
         auto root = ast::parse_expression(input);
         string ast_representation = ast::serialize(*root);
 
@@ -106,7 +97,6 @@ int main(int argc, char** argv) {
         if (!output_file) throw std::runtime_error("Could not open output file: " + string(argv[1]));
         output_file << ast_representation << endl;
         output_file.close();
-
         return 0;
     } catch (const std::exception& e) {
         cerr << "Error: " << e.what() << endl;
