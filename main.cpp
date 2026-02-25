@@ -103,7 +103,13 @@ int main(int argc, char** argv) {
 
         // TODO : build AST mode (since they use the same step (excpet reading input))
         // 2. build AST (using syntax tree structure) - todo búa til structureið
+        string ast_representation = "TODO: AST representation here"; // placeholder for AST representation
+
         // 3. write to argv[1] (ast output file)
+        ofstream output_file(argv[1]);
+        if (!output_file) throw std::runtime_error("Could not open output file: " + string(argv[1]));
+        output_file << ast_representation << endl;
+        output_file.close();
 
         return 0;
     } catch (const std::exception& e) {
