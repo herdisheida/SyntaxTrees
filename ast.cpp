@@ -42,8 +42,7 @@ namespace ast {
     // ---------- utilities ----------
     /* remove whitespace at beginning and end of string */
     static string trim_ws(const string& s) {
-        size_t i = 0;
-        size_t j = s.size();
+        size_t i = 0, j = s.size();
         while (i < j && std::isspace((unsigned char) s[i])) i++;
         while (j > i && std::isspace((unsigned char) s[j - 1])) j--;
         return s.substr(i, j - i);
