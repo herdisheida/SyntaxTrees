@@ -47,8 +47,11 @@ static string read_file(const char* filename) {
 
 void print_usage(const char* program_name) {
     cerr << "Usage:" << endl;
-    cerr << "  " << program_name << " <ast_out_file> <expr_in_file>" << endl;
-    cerr << "  " << program_name << " --eval <ast_file>" << endl;
+    cerr << "  " << "Build AST:" << endl;
+    cerr << "    " << program_name << " <ast_out_file> <expr_in_file>" << endl;
+    cerr << "    " << program_name << " <ast_out_file> (read from stdin)" << endl;
+    cerr << "  " << "Evaluate AST:" << endl;
+    cerr << "    " << program_name << " <ast_file>" << endl;
 }
 
 int main(int argc, char** argv) {
@@ -58,7 +61,7 @@ int main(int argc, char** argv) {
             1. ./<program-name>   <ast-output-file>   <expr-input-file>
             2. ./<program-name>   <ast-output-file>   (read from stdin)
         evaluate AST mode (read from file):
-            1. ./<program-name>   --eval   <ast-file>
+            1. ./<program-name>   <ast-file>
         */
 
         if (argc != 2 && argc != 3) {
@@ -67,7 +70,8 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        if (string(argv[1]) == "--eval") {
+        // TODO -- evaluation hefur bara 2 argument, ./program <ast-file-to-eval>
+        if (string(argv[1]) == "") {
             if (argc == 3) {
                 // evaluate AST mode
                 // TODO: read from file, evaluate AST, print result
@@ -108,7 +112,7 @@ int main(int argc, char** argv) {
 
         // TODO : build AST mode (since they use the same step (excpet reading input))
         // 2. build AST (using syntax tree structure) - todo búa til structureið
-        // string ast_representation = "TODO: AST representation here"; // placeholder for AST representation
+        // string ast_representation = "TODO: AST representation here"; // placeholder for AST representation TODO remove
         auto root = ast::parse_expression(input);
         string ast_representation = ast::serialize(*root);
 
