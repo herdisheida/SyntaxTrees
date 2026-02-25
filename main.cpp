@@ -16,9 +16,8 @@ using std::ifstream; // file input stream
 using std::ofstream; // file output stream
 
 
-
+ /* read from stdin: ignoring whitespace, newline, tab, etc */
 static string read_stdin(std::istream& in) {
-    /* read from stdin: ignoring whitespace, newline, tab, etc */
     string result;
     char c;
     while (in >> c)
@@ -26,8 +25,8 @@ static string read_stdin(std::istream& in) {
     return result;
 }
 
+/* read from file: ignoring whitespace, newline, tab, etc */
 static string read_file(const char* filename) {
-    /* read from file: ignoring whitespace, newline, tab, etc */
     try {
         ifstream file(filename);
         if (!file) throw std::runtime_error("Could not open file: " + string(filename));
