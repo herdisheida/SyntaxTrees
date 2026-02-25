@@ -9,7 +9,7 @@ namespace ast {
 
     struct Node {
         // division rounds down
-        enum class Kind { Number, Add, Sub, Mul, Div }; // number + operators[+, -, *, /]
+        enum class Kind { Number, Add, Sub, Mul, Div, Neg }; // number + operators[+, -, *, /]
 
         Kind kind;
         std::int64_t value; // used only if Number

@@ -22,10 +22,10 @@ namespace ast {
     };
 
     static const OpInfo ops[] = {
-        {'+', Node::Kind::Add},
-        {'-', Node::Kind::Sub},
-        {'*', Node::Kind::Mul},
-        {'/', Node::Kind::Div}
+        {'+', Node::Kind::Add}, // plus
+        {'-', Node::Kind::Sub}, // binary minus
+        {'*', Node::Kind::Mul}, // multiply
+        {'/', Node::Kind::Div}, // divide (round down)
     };
 
     static bool op_to_kind(char op, Node::Kind& out_kind) {
@@ -70,10 +70,11 @@ namespace ast {
             case Node::Kind::Sub:    return evaluate(*root.left) - evaluate(*root.right);
             case Node::Kind::Mul:    return evaluate(*root.left) * evaluate(*root.right);
             case Node::Kind::Div:    {
-                int64_t divisor = evaluate(*root.right); // neðri talan í deilingu
+                int64_t divisor = evaluate(*root.right); // neðri talan í almennu broti
                 if (divisor == 0) throw std::runtime_error("evaluate: division by zero");
                 return evaluate(*root.left) / divisor;
             }
+            case Node::Kind::Neg:    return -evaluate(*root.left);
         }
         throw std::runtime_error("evaluate: unknown node kind");
     }
@@ -112,9 +113,15 @@ namespace ast {
     
         for (int i = 0; i < (int) s.size(); i++) {
             char c = s[i];
-            if (c == '(') depth++;
-            else if (c == ')') depth--;
-            else if (depth == 0 && c == op) result = i; // last occurance of op found at depth 0
+            if (c == '(') {
+                depth++;
+            } else if (c == ')') {
+                depth--;
+            } else if (depth == 0 && c == op) {
+                // skip unary minus
+                if (op == '-' && (i == 0 || s[i-1] == '(' || s[i-1] == '+' || s[i-1] == '-' || s[i-1] == '*' || s[i-1] == '/')) continue;
+                result = i; // last occurance of op found at depth 0
+            }
         }
         return result; // not found
     }
@@ -134,24 +141,26 @@ namespace ast {
     }
     // ---------- parse_expression (build AST: expression -> AST) ----------
     /* precedence order:
-        0. lowest
-        1. + and -
-        2. *
-        3. numbers
-        4. highest
+        1. unary minnus
+        2. + and -
+        3. * and /
+        4. numbers
     */
     static unique_ptr<Node> parse_rec(string s) {
         s = strip_outer_parens(s);
         s = trim_ws(s);
 
-        // try splitting on + or - or * or /
-        for (const auto& op : ops) {
-            if (auto node = try_split(s, op.symbol, op.kind)) return node;
-        }
-
-        // otherwise must be a number
+        // handle binary operators
+        for (const auto& op : ops) { if (auto node = try_split(s, op.symbol, op.kind)) return node; }
         if (s.empty()) throw std::runtime_error("parse: empty token");
 
+        // handle unary minus
+        if (!s.empty() && s[0] == '-') {
+            auto operand = parse_rec(s.substr(1));
+            return Node::make_op(Node::Kind::Neg, std::move(operand), unique_ptr<Node>{});
+        }
+
+        // handle positive numbers
         int64_t v = 0;
         for (char c : s) {
             if (!std::isdigit((unsigned char) c)) throw std::runtime_error("parse: expected number but got: " + s);
@@ -170,8 +179,17 @@ namespace ast {
             out << n.value;
             return;
         }
-        char op = kind_to_op(n.kind);
-        
+
+        // handle unary minus
+        if (n.kind == Node::Kind::Neg) {
+            out << "(~ ";
+            serialize_rec(out, *n.left);
+            out << ")";
+            return;
+        }
+
+        char op = kind_to_op(n.kind); // binary operator
+                
         out << "(" << op << " ";
         serialize_rec(out, *n.left);
         out << " ";
@@ -215,7 +233,15 @@ namespace ast {
                     get(); // '('
                     skip_ws();
 
-                    char op = get(); // '+' 'or '-' or '*'
+                    char op = get(); // binary operators
+                    if (op == '~') {
+                        skip_ws();
+                        auto a = parse_node();
+                        skip_ws();
+                        if (get() != ')') throw std::runtime_error("deserialize: expected ')' for unary operator at pos " + std::to_string(pos_));
+                        return Node::make_op(Node::Kind::Neg, std::move(a), unique_ptr<Node>{});
+                    }
+
                     Node::Kind k;
                     if (!op_to_kind(op, k)) throw std::runtime_error("deserialize: expected one of + - * /");
 
