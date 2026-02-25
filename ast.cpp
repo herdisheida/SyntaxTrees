@@ -15,7 +15,7 @@ using std::size_t;
 
 namespace ast {
 
-    // ---------- operator info ----------
+    // ---------- operator info helpers ----------
     struct OpInfo {
         char symbol;
         Node::Kind kind;
