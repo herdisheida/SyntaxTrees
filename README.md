@@ -37,8 +37,10 @@ TODO--- klara skyldu stuff í README.md
 
 [ ] What additional features were implemented above the base version, if any.
 
-1. Whitespace insensitive (5%): the program ignores whitespace characters (spaces, tabs, newlines) in the input expression.
-2. Modern C++ Tree (5%): the AST is implemented smart pointers (std::unique_ptr) and has left and right child pointers for binary operations, and a value for leaf nodes
+1. Whitespace insensitive (5%): ignore whitespace characters (spaces, tabs, newlines) in the input expression.
+2. Modern C++ Tree (5%): the AST is implemented like a tree (left and right children) with smart pointers (std::unique_ptr)
+3. Extra operations (10%): support binary minus, binary division and unary minus
+4. Error handling (~10%): appropriate error msg - file not found, invalid expression (e.g., missing parentheses, invalid characters, etc), invalid AST file format, division by zero
 
 [ ] An explanation of the format you store the AST (Abstract Syntax Tree) in that the two versions read/write.
 
