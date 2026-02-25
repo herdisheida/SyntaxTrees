@@ -3,6 +3,7 @@
 #include <cctype> // isdigit, isspace
 #include <stdexcept> // runtime_error
 #include <sstream> // ostringstream : write to string
+#include <unordered_map>
 
 
 using std::unique_ptr;
@@ -10,7 +11,7 @@ using std::string;
 using std::int64_t;
 using std::size_t;
 
-
+using VarMap = std::unordered_map<std::string, std::int64_t>;
 
 
 namespace ast {
@@ -46,6 +47,14 @@ namespace ast {
     }
 
     // ---------- build Nodes (operators and numbers) ----------
+    unique_ptr<Node> Node::make_var(const string& var_name) {
+        auto n = std::make_unique<Node>();
+        n -> kind = Kind::Var;
+        n -> value = 0; // not used
+        n -> name = var_name;
+        return n;
+    }
+
     unique_ptr<Node> Node::make_number(int64_t v) {
         auto n = std::make_unique<Node>();
         n -> kind = Kind::Number;
@@ -56,25 +65,30 @@ namespace ast {
     unique_ptr<Node> Node::make_op(Kind k, unique_ptr<Node> a, unique_ptr<Node> b) {
         auto n = std::make_unique<Node>();
         n -> kind = k;
-        n -> value = 0; // not used for operators
+        n -> value = 0; // not used
         n -> left = std::move(a);   // a becomes owned by n
         n -> right = std::move(b);  // b becomes owned by n
         return n;
     }
 
     // ---------- evaluate ----------
-    int64_t evaluate(const Node& root) {
+    int64_t evaluate(const Node& root, const VarMap& env) {
         switch (root.kind) {
             case Node::Kind::Number: return root.value;
-            case Node::Kind::Add:    return evaluate(*root.left) + evaluate(*root.right);
-            case Node::Kind::Sub:    return evaluate(*root.left) - evaluate(*root.right);
-            case Node::Kind::Mul:    return evaluate(*root.left) * evaluate(*root.right);
+            case Node::Kind::Add:    return evaluate(*root.left, env) + evaluate(*root.right, env);
+            case Node::Kind::Sub:    return evaluate(*root.left, env) - evaluate(*root.right, env);
+            case Node::Kind::Mul:    return evaluate(*root.left, env) * evaluate(*root.right, env);
             case Node::Kind::Div:    {
-                int64_t divisor = evaluate(*root.right); // neðri talan í almennu broti
+                int64_t divisor = evaluate(*root.right, env); // neðri talan í almennu broti
                 if (divisor == 0) throw std::runtime_error("evaluate: division by zero");
-                return evaluate(*root.left) / divisor;
+                return evaluate(*root.left, env) / divisor;
             }
-            case Node::Kind::Neg:    return -evaluate(*root.left);
+            case Node::Kind::Neg:    return -evaluate(*root.left, env);
+            case Node::Kind::Var: {
+                auto it = env.find(root.name);
+                if (it == env.end()) throw std::runtime_error("evaluate: undefined variable: " + root.name);
+                return it -> second;
+            }
         }
         throw std::runtime_error("evaluate: unknown node kind");
     }
@@ -150,23 +164,37 @@ namespace ast {
         s = strip_outer_parens(s);
         s = trim_ws(s);
 
-        // handle binary operators
-        for (const auto& op : ops) { if (auto node = try_split(s, op.symbol, op.kind)) return node; }
+        // handle binary operators [+ - * /]
+        for (const auto& op : ops) {
+            if (auto node = try_split(s, op.symbol, op.kind)) return node;
+        }
         if (s.empty()) throw std::runtime_error("parse: empty token");
 
         // handle unary minus
-        if (!s.empty() && s[0] == '-') {
+        if (s[0] == '-') {
             auto operand = parse_rec(s.substr(1));
             return Node::make_op(Node::Kind::Neg, std::move(operand), unique_ptr<Node>{});
         }
 
-        // handle positive numbers
-        int64_t v = 0;
+        // variable: all lowercase letters
+        bool all_lower = true;
         for (char c : s) {
-            if (!std::isdigit((unsigned char) c)) throw std::runtime_error("parse: expected number but got: " + s);
-            v = v * 10 + (c - '0');  // string -> ascii -> digit
+            if (!(c >= 'a' && c <= 'z')) { all_lower = false; break; }
         }
-        return Node::make_number(v);
+        if (all_lower) return Node::make_var(s);
+
+        // number: all digits
+        bool all_digits = true;
+        for (char c : s) {
+            if (!std::isdigit((unsigned char) c)) { all_digits = false; break; }
+        }
+        if (all_digits) {
+            int64_t v = 0;
+            for (char c : s) v = v * 10 + (c - '0');  // string -> ascii -> digit
+            return Node::make_number(v);
+        }
+
+        throw std::runtime_error("parse: expected number or variable but got: " + s);
     }
 
     unique_ptr<Node> parse_expression(const string& expr) {
@@ -175,10 +203,8 @@ namespace ast {
 
     // ---------- serialize (AST -> string) ----------
     static void serialize_rec(std::ostream& out, const Node& n) {
-        if (n.kind == Node::Kind::Number) {
-            out << n.value;
-            return;
-        }
+        if (n.kind == Node::Kind::Number) { out << n.value; return; }
+        if (n.kind == Node::Kind::Var)    { out << n.name;  return; }
 
         // handle unary minus
         if (n.kind == Node::Kind::Neg) {
@@ -255,7 +281,30 @@ namespace ast {
                     // create operator node
                     return Node::make_op(k, std::move(a), std::move(b));
                 }
-                return Node::make_number(parse_number());
+
+  
+                // number or variable
+                if (std::isdigit((unsigned char) peek())) return Node::make_number(parse_number());
+                if (peek() >= 'a' && peek() <= 'z') return Node::make_var(parse_identifier());
+                
+                throw std::runtime_error("deserialize: expected number or variable at pos " + std::to_string(pos_));
+            }
+
+            string parse_identifier() {
+                // parse variable
+                skip_ws();
+                string name;
+                while (pos_ < s_.size()) {
+                    char c = peek();
+                    if (c >= 'a' && c <= 'z') {
+                        name += get();
+                    } else {
+                        break;
+                    }
+                }
+                if (name.empty())
+                    throw std::runtime_error("deserialize: expected variable at pos " + std::to_string(pos_));
+                return name;
             }
 
             int64_t parse_number() {

@@ -1,7 +1,9 @@
 #include "ast.h"
+#include <cstddef>
 #include <iostream>
-#include <string>
+#include <string> // string, stoll, etc
 #include <fstream> // file streams
+#include <unordered_map> // for variable environment
 
 
 using std::cerr; // console error output
@@ -14,6 +16,8 @@ using std::string;
 using std::istream;  // input stream
 using std::ifstream; // file input stream
 using std::ofstream; // file output stream
+
+using VarMap = std::unordered_map<std::string, std::int64_t>; // unordered map for variables (name to value)
 
 
  /* read from stdin: ignoring whitespace, newline, tab, etc */
@@ -45,12 +49,47 @@ static string read_file(const char* filename, bool ignore_whitespace = true) {
     return result;
 }
 
-void evaluate_AST(const char* filename) {
+static VarMap read_vars_file(const char* filename) {
+    ifstream file(filename);
+    if (!file) throw std::runtime_error(std::string("Could not open variable file: ") + filename);
+
+    VarMap env;
+    string line;
+
+    while (std::getline(file, line)) {
+        // remove spaces/tabs
+        string s;
+        for (char c : line) if (!std::isspace((unsigned char)c)) s += c;
+        if (s.empty()) continue;
+
+        auto eq = s.find('=');
+        if (eq == string::npos) throw std::runtime_error("vars: expected name=value but got: " + s);
+
+        string name = s.substr(0, eq);
+        string value_str = s.substr(eq + 1);
+
+        if (name.empty()) throw std::runtime_error("vars: empty name in line: " + s);
+        for (char c : name) if (!(c >= 'a' && c <= 'z')) throw std::runtime_error("vars: invalid variable name: " + name);
+
+        if (value_str.empty()) throw std::runtime_error("vars: empty value in line: " + s);
+
+        int64_t value = std::stoll(value_str);  // convert string into int64_t
+        env[name] = value;
+    }
+    return env;
+}
+
+
+void evaluate_AST(const char* filename, const char* vars_filename = NULL) {
     string ast_input = read_file(filename, false);  // do not ignore whitespace for AST input
+
+    VarMap env;
+    if (vars_filename != NULL) env = read_vars_file(vars_filename);
+
     cout << "AST read from file (" << filename << "): " << ast_input << endl;
     
     auto root = ast::deserialize(ast_input);
-    auto result = ast::evaluate(*root);
+    auto result = ast::evaluate(*root, env);
     cout << "Result: " << result << endl;
 }
 
@@ -61,20 +100,36 @@ void print_usage(const char* program_name) {
     cerr << "    " << program_name << " <ast-out-file> (read expr from stdin)" << endl;
     cerr << "  " << "Evaluate AST:" << endl;
     cerr << "    " << program_name << " --eval <ast-file>" << endl;
+    cerr << "    " << program_name << " --eval <ast-file> <vars-file>" << endl;
+
 }
 
 
 int main(int argc, char** argv) {
     try {
-        if (argc != 2 && argc != 3) {
+        if (argc != 2 && argc != 3 && argc != 4) {
             // incorrect num of args
             print_usage(argv[0]);
             return 1;
         }
 
-        if (argc == 3 && string(argv[1]) == "--eval") {
-            evaluate_AST(argv[2]);
-            return 0;
+        if (string(argv[1]) == "--eval") {
+            // normal eval mode: --eval <ast-file>
+            if (argc == 3) {
+                evaluate_AST(argv[2]);
+                return 0;
+            }
+            
+            // eval mode with variables: --eval <ast-file> <vars-file>
+            else if (argc == 4) {
+                evaluate_AST(argv[2], argv[3]);
+                return 0;
+            }
+
+            else {
+                print_usage(argv[0]);
+                return 1;
+            }
         }
 
         // ---------- build AST mode ----------
