@@ -20,10 +20,10 @@ namespace ast {
         static std::unique_ptr<Node> make_op(Kind k, std::unique_ptr<Node> a, std::unique_ptr<Node> b);
     };
 
-    // Build AST from an expression string: 2+7*(1+3)
+    // Build AST from an expression string, like 2+7*(1+3)
     std::unique_ptr<Node> parse_expression(const std::string& expr);
 
-    // Convert AST to a string to write to file: (+ 2 (* 7 (+ 1 3)))
+    // Convert AST to a string to write to file, becomes like (+ 2 (* 7 (+ 1 3)))
     std::string serialize(const Node& root);
 
     // Read AST back from its serialized string

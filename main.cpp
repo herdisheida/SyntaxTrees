@@ -77,28 +77,28 @@ int main(int argc, char** argv) {
             return 0;
         }
 
-        // build AST mode:
-        // 1. get input expr
+        // ---------- build AST mode ----------
+        // 1. get expression string
         string input;
         if (argc == 3) {
             // get expr from file
             input = read_file(argv[2]);
-            cout << "Input read from file (" << argv[2] << "): " << input << endl;
+            cout << "Input read from file (" << argv[2] << "): " << input;
         }
         if (argc == 2) {
             // get expr from stdin
             input = read_stdin(cin);
-            cout << "Input read from stdin: " << input << endl;
+            cout << "Input read from stdin: " << input;
         }
 
         // 2. build AST from input expr
         auto root = ast::parse_expression(input);
-        string ast_representation = ast::serialize(*root);
+        string ast_str_representation = ast::serialize(*root);
 
-        // 3. write to argv[1] (ast output file)
+        // 3. write AST to output file
         ofstream output_file(argv[1]);
         if (!output_file) throw std::runtime_error("Could not open output file: " + string(argv[1]));
-        output_file << ast_representation << endl;
+        output_file << ast_str_representation << endl;
         output_file.close();
         return 0;
     } catch (const std::exception& e) {
