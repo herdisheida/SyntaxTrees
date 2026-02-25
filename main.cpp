@@ -55,14 +55,9 @@ void print_usage(const char* program_name) {
 }
 
 void evaluate_AST(const char* filename) {
-    // evaluate AST mode
-    // TODO: read from file, evaluate AST, print result
-    // 1. read from argv[2]
     string ast_input = read_file(filename);
     cout << "AST read from file (" << filename << "): " << ast_input << endl;
-    // 2. evaluate AST (using syntax tree structure) - todo búa til structureið
     auto root = ast::deserialize(ast_input);
-    // 3. print result
     cout << "Result: " << ast::evaluate(*root) << endl;
 }
 
@@ -73,7 +68,7 @@ int main(int argc, char** argv) {
             1. ./<program-name>   <ast-output-file>   <expr-input-file>
             2. ./<program-name>   <ast-output-file>   (read from stdin)
         evaluate AST mode (read from file):
-            1. ./<program-name>   <ast-file>
+            1. ./<program-name>   --eval   <ast-file>
         */
 
         if (argc != 2 && argc != 3) {
@@ -82,36 +77,22 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        // TODO -- evaluation hefur bara 2 argument, ./program <ast-file-to-eval>
-        if (string(argv[1]) == "--eval") {
-            if (argc == 3) {
-                evaluate_AST(argv[2]);
-                return 0;
-            } else {
-                // incorrect num of args for eval mode
-                print_usage(argv[0]);
-                return 1;
-            }
+        if (argc == 3 && string(argv[1]) == "--eval") {
+            evaluate_AST(argv[2]);
+            return 0;
         }
 
         // build AST mode
         string input;
-        if (argc == 3) {  // get expr from file
-            // TODO: read from file, build AST, write to file
-            // 1. read from argv[2] (expr input file)
+        if (argc == 3) {
+            // get expr from file
             input = read_file(argv[2]);
             cout << "Input read from file (" << argv[2] << "): " << input << endl;
-            // 2. build AST (using syntax tree structure) - todo búa til structureið
-            // 3. write to argv[1] (ast output file)
         }
-
-        if (argc == 2) {  // get expr from stdin
-            // TODO: build AST from input, write to argv[1]
-            // 1. read input from stdin
+        if (argc == 2) {
+            // get expr from stdin
             input = read_stdin(cin);
             cout << "Input read from stdin: " << input << endl;
-            // 2. build AST (using syntax tree structure) - todo búa til structureið
-            // 3. write to argv[1] (ast output file)
         }
 
         // TODO : build AST mode (since they use the same step (excpet reading input))
