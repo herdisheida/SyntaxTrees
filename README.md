@@ -37,6 +37,8 @@ TODO--- klara skyldu stuff í README.md
 
 [ ] What additional features were implemented above the base version, if any.
 
+1. Whitespace insensitive: the program ignores whitespace characters (spaces, tabs, newlines) in the input expression.
+
 [ ] An explanation of the format you store the AST (Abstract Syntax Tree) in that the two versions read/write.
 
 [ ] Anything else a student wishes to say. Put it here and not in the Canvas comments!

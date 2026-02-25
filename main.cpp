@@ -26,7 +26,7 @@ static string read_stdin(std::istream& in) {
 }
 
 /* read from file: ignoring whitespace, newline, tab, etc */
-static string read_file(const char* filename) {
+static string read_file(const char* filename, bool ignore_whitespace = true) {
     try {
         ifstream file(filename);
         if (!file) throw std::runtime_error("Could not open file: " + string(filename));
@@ -35,7 +35,7 @@ static string read_file(const char* filename) {
         string result;
         char c;
         while (file.get(c)) {
-            if (std::isspace((unsigned char)c)) continue;
+            if (ignore_whitespace && std::isspace((unsigned char)c)) continue;
             result += c;
         }
         file.close();
@@ -47,7 +47,7 @@ static string read_file(const char* filename) {
 }
 
 void evaluate_AST(const char* filename) {
-    string ast_input = read_file(filename);
+    string ast_input = read_file(filename, false);  // do not ignore whitespace for AST input
     cout << "AST read from file (" << filename << "): " << ast_input << endl;
     auto root = ast::deserialize(ast_input);
     cout << "Result: " << ast::evaluate(*root) << endl;
