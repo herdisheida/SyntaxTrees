@@ -1,6 +1,8 @@
 // #include "ast.h"
 #include <iostream>
 #include <string>
+#include <fstream> // file streams
+
 
 using std::cerr; // console error output
 using std::cout; // console output
@@ -9,16 +11,39 @@ using std::cin;  // console input
 using std::endl; // newline
 using std::string;
 
+using std::istream;  // input stream
+using std::ifstream; // file input stream
+using std::ofstream; // file output stream
+
 
 
 static string read_stdin(std::istream& in) {
-    /* ignor whitespace, newline, tab, etc */
+    /* read from stdin: ignoring whitespace, newline, tab, etc */
     string result;
     char c;
     while (in >> c)
         result += c;
     return result;
 }
+
+static string read_file(const char* filename) {
+    /* read from file: ignoring whitespace, newline, tab, etc */
+    try {
+        ifstream file(filename);
+        if (!file) throw std::runtime_error("Could not open file: " + string(filename));
+
+        // read file char by char
+        string result;
+        char c;
+        while (file.get(c)) { result += c; }
+        file.close();
+        return result;
+    } catch (const std::exception& e) {
+        cerr << "Error: " << e.what() << endl;
+        return "";
+    }
+}
+
 
 void print_usage(const char* program_name) {
     cerr << "Usage:" << endl;
@@ -61,19 +86,24 @@ int main(int argc, char** argv) {
         if (argc == 3) {  // get expr from file
             // TODO: read from file, build AST, write to file
             // 1. read from argv[2] (expr input file)
+            string input = read_file(argv[2]);
+            cout << "Input read from file (" << argv[2] << "): " << input << endl;
             // 2. build AST (using syntax tree structure) - todo búa til structureið
             // 3. write to argv[1] (ast output file)
         }
 
         if (argc == 2) {  // get expr from stdin
-            string input = read_stdin(cin);
             // TODO: build AST from input, write to argv[1]
             // 1. read input from stdin
+            string input = read_stdin(cin);
+            cout << "Input read from stdin: " << input << endl;
             // 2. build AST (using syntax tree structure) - todo búa til structureið
             // 3. write to argv[1] (ast output file)
-            cout << "Input read from stdin: " << input << endl;
         }
 
+        // TODO : build AST mode (since they use the same step (excpet reading input))
+        // 2. build AST (using syntax tree structure) - todo búa til structureið
+        // 3. write to argv[1] (ast output file)
 
         return 0;
     } catch (const std::exception& e) {
