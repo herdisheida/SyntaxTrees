@@ -46,12 +46,24 @@ static string read_file(const char* filename) {
 
 
 void print_usage(const char* program_name) {
-    cerr << "Usage:" << endl;
+    cerr << "Usage:" << endl << endl;
     cerr << "  " << "Build AST:" << endl;
     cerr << "    " << program_name << " <ast_out_file> <expr_in_file>" << endl;
-    cerr << "    " << program_name << " <ast_out_file> (read from stdin)" << endl;
+    cerr << "    " << program_name << " <ast_out_file> (read expr from stdin)" << endl;
     cerr << "  " << "Evaluate AST:" << endl;
     cerr << "    " << program_name << " <ast_file>" << endl;
+}
+
+void evaluate_AST(const char* filename) {
+    // evaluate AST mode
+    // TODO: read from file, evaluate AST, print result
+    // 1. read from argv[2]
+    string ast_input = read_file(filename);
+    cout << "AST read from file (" << filename << "): " << ast_input << endl;
+    // 2. evaluate AST (using syntax tree structure) - todo búa til structureið
+    auto root = ast::deserialize(ast_input);
+    // 3. print result
+    cout << "Result: " << ast::evaluate(*root) << endl;
 }
 
 int main(int argc, char** argv) {
@@ -71,17 +83,9 @@ int main(int argc, char** argv) {
         }
 
         // TODO -- evaluation hefur bara 2 argument, ./program <ast-file-to-eval>
-        if (string(argv[1]) == "") {
+        if (string(argv[1]) == "--eval") {
             if (argc == 3) {
-                // evaluate AST mode
-                // TODO: read from file, evaluate AST, print result
-                // 1. read from argv[2]
-                string ast_input = read_file(argv[2]);
-                cout << "AST read from file (" << argv[2] << "): " << ast_input << endl;
-                // 2. evaluate AST (using syntax tree structure) - todo búa til structureið
-                auto root = ast::deserialize(ast_input);
-                // 3. print result
-                cout << "Result: " << ast::evaluate(*root) << endl;
+                evaluate_AST(argv[2]);
                 return 0;
             } else {
                 // incorrect num of args for eval mode
