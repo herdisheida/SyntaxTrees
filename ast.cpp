@@ -145,24 +145,41 @@ namespace ast {
         return s.substr(i, j - i);
     }
 
-    /* if the expr string is wrapped by one outer (...), remove it */
+    /*
+        if the expr string is wrapped by one outer (...), remove it.
+        Keep stripping until no more outer parens can be removed.
+        e.g. (((x))) -> x
+    */
     static string strip_outer_parens(const string& s) {
         string t = trim_ws(s);
         
-        if (t.size() < 2 || t.front() != '(' || t.back() != ')') return t; // not wrapped by parens
+        while (true) {
+            t = trim_ws(t);
+            if (t.size() < 2 || t.front() != '(' || t.back() != ')') return t; // not wrapped by parens
 
-        int depth = 0;
-        for (size_t i = 0; i < t.size(); i++) {
-            if (t[i] == '(') depth++;
-            else if (t[i] == ')') depth--;
-            if (depth == 0 && i != t.size() - 1) {
-                return t; // parens closes early, not a full wrapper
+            int depth = 0;
+            bool fully_wrapped = true;
+
+            for (size_t i = 0; i < t.size(); i++) {
+                // track parentheses depth
+                if (t[i] == '(') depth++;
+                else if (t[i] == ')') depth--;
+
+                // parens closes early (not at last char), not a full wrapper
+                if (depth == 0 && i != t.size() - 1) {
+                    fully_wrapped = false;
+                    break;
+                }
+        
+                if (depth < 0) throw std::runtime_error("parse strip_outer_parens: unbalanced parentheses in: " + t);
             }
-        }
+            if (depth != 0) throw std::runtime_error("parse strip_outer_parens: unbalanced parentheses in: " + t);
+            
+            if (!fully_wrapped) return t; // have removed ALL wrapperd parens
 
-        if (depth != 0) throw std::runtime_error("strip_outer_parens: unbalanced parentheses in: " + s);
-        // fully wrapped
-        return trim_ws(t.substr(1, t.size() - 2));
+            // strip one wrapper and continue
+            t = trim_ws(t.substr(1, t.size() - 2));
+        }
     }
 
     /* find last operator at parentheses depth 0  (left-associative operators) */
