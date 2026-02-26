@@ -5,6 +5,8 @@
 #include <sstream> // ostringstream : write to string
 #include <unordered_map>
 
+#include <iostream> // debug
+
 
 using std::unique_ptr;
 using std::string;
@@ -147,7 +149,7 @@ namespace ast {
     static string strip_outer_parens(const string& s) {
         string t = trim_ws(s);
         
-        if (t.size() < 2 || t.front() != '(' || t.back() != ')') return t;
+        if (t.size() < 2 || t.front() != '(' || t.back() != ')') return t; // not wrapped by parens
 
         int depth = 0;
         for (size_t i = 0; i < t.size(); i++) {
@@ -157,6 +159,8 @@ namespace ast {
                 return t; // parens closes early, not a full wrapper
             }
         }
+
+        if (depth != 0) throw std::runtime_error("strip_outer_parens: unbalanced parentheses in: " + s);
         // fully wrapped
         return trim_ws(t.substr(1, t.size() - 2));
     }
@@ -214,6 +218,9 @@ namespace ast {
         // handle unary minus
         if (s[0] == '-') {
             auto operand = parse_rec(s.substr(1));
+            // double negation
+            if (operand && operand -> kind == Node::Kind::Neg) return std::move(operand -> left); // -x becomes x
+            
             return Node::make_op(Node::Kind::Neg, std::move(operand), unique_ptr<Node>{});
         }
 
@@ -305,19 +312,22 @@ namespace ast {
                         skip_ws();
                         auto a = parse_node();
                         skip_ws();
-                        if (get() != ')') throw std::runtime_error("deserialize: expected ')' for unary operator at pos " + std::to_string(pos_));
+                        const char closing = get();
+                        if (closing != ')') throw std::runtime_error("deserialize: expected ')' for unary operator at pos " + std::to_string(pos_));
                         return Node::make_op(Node::Kind::Neg, std::move(a), unique_ptr<Node>{});
                     }
 
                     Node::Kind k;
-                    if (!op_to_kind(op, k)) throw std::runtime_error("deserialize: expected one of + - * /");
+                    if (!op_to_kind(op, k)) throw std::runtime_error("deserialize: expected one of + - * / but got '" + string(1, op) + "'");
 
                     skip_ws();
                     auto a = parse_node();
                     skip_ws();
                     auto b = parse_node();
                     skip_ws();
-                    if (get() != ')') throw std::runtime_error("deserialize: expected ')'");
+
+                    const char closing = get();
+                    if (closing != ')') throw std::runtime_error("deserialize: expected ')' but got '" + string(1, closing) + "'");
 
                     // create operator node
                     return Node::make_op(k, std::move(a), std::move(b));
@@ -328,7 +338,7 @@ namespace ast {
                 if (std::isdigit((unsigned char) peek())) return Node::make_number(parse_number());
                 if (peek() >= 'a' && peek() <= 'z') return Node::make_var(parse_identifier());
                 
-                throw std::runtime_error("deserialize: expected number or variable at pos " + std::to_string(pos_));
+                throw std::runtime_error("deserialize: expected number or variable but got '" + string(1, peek()) + "'");
             }
 
             string parse_identifier() {
@@ -344,7 +354,7 @@ namespace ast {
                     }
                 }
                 if (name.empty())
-                    throw std::runtime_error("deserialize: expected variable at pos " + std::to_string(pos_));
+                    throw std::runtime_error("deserialize: expected variable but got '" + string(1, peek()) + "'");
                 return name;
             }
 
@@ -356,7 +366,7 @@ namespace ast {
                     any = true;
                     v = v * 10 + (get() - '0');
                 }
-                if (!any) throw std::runtime_error("deserialize: expected number at pos " + std::to_string(pos_));
+                if (!any) throw std::runtime_error("deserialize: expected number but got '" + string(1, peek()) + "'");
                 return v;
             }
 
