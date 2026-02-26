@@ -63,7 +63,7 @@ static VarMap read_vars_file(const char* filename) {
         if (s.empty()) continue;
 
         auto eq = s.find('=');
-        if (eq == string::npos) throw std::runtime_error("vars: expected name=value but got: " + s);
+        if (eq == string::npos) throw std::runtime_error("vars: expected 'name=value' but got: " + s);
 
         string name = s.substr(0, eq);
         string value_str = s.substr(eq + 1);
