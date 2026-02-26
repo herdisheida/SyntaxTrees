@@ -153,7 +153,9 @@ namespace ast {
     static string strip_outer_parens(const string& s) {
         string t = trim_ws(s);
         
-        while (true) {
+        bool stripped = true;
+        while (stripped) {
+            stripped = false;
             t = trim_ws(t);
             if (t.size() < 2 || t.front() != '(' || t.back() != ')') return t; // not wrapped by parens
 
@@ -174,12 +176,14 @@ namespace ast {
                 if (depth < 0) throw std::runtime_error("parse strip_outer_parens: unbalanced parentheses in: " + t);
             }
             if (depth != 0) throw std::runtime_error("parse strip_outer_parens: unbalanced parentheses in: " + t);
-            
-            if (!fully_wrapped) return t; // have removed ALL wrapperd parens
-
-            // strip one wrapper and continue
-            t = trim_ws(t.substr(1, t.size() - 2));
+                        
+            if (fully_wrapped) {
+                // strip one wrapper and continue loop
+                t = trim_ws(t.substr(1, t.size() - 2));
+                stripped = true;
+            }
         }
+        return t;
     }
 
     /* find last operator at parentheses depth 0  (left-associative operators) */
