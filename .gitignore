@@ -3,3 +3,4 @@ main.o
 program
 ast.tree
 .DS_Store
+SyntaxTree.zip
