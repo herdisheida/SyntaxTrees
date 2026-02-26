@@ -33,9 +33,9 @@ static string read_stdin(std::istream& in) {
 }
 
 /* read from file: ignoring whitespace, newline, tab, etc */
-static string read_file(const char* filename, bool ignore_whitespace = true) {
+static string read_file(const char* filename, bool ignore_whitespace = true, const string& file_description = "file") {
     ifstream file(filename);
-    if (!file) throw std::runtime_error("Could not open file: " + string(filename));
+    if (!file) throw std::runtime_error("Could not open " + file_description + ": " + string(filename));
 
     // read file char by char
     string result;
@@ -44,7 +44,7 @@ static string read_file(const char* filename, bool ignore_whitespace = true) {
         if (ignore_whitespace && std::isspace((unsigned char)c)) continue;
         result += c;
     }
-    if (!file.eof()) throw std::runtime_error("Error while reading file: " + string(filename));
+    if (!file.eof()) throw std::runtime_error("Error while reading " + file_description + ": " + string(filename));
     file.close();
     return result;
 }
@@ -81,12 +81,11 @@ static VarMap read_vars_file(const char* filename) {
 
 
 void evaluate_AST(const char* filename, const char* vars_filename = NULL) {
-    string ast_input = read_file(filename, false);  // do not ignore whitespace for AST input
+    string ast_input = read_file(filename, false, "AST file");  // do not ignore whitespace for AST input
+    if (ast_input.empty()) throw std::runtime_error("AST input file is empty: " + string(filename));
 
     VarMap env;
     if (vars_filename != NULL) env = read_vars_file(vars_filename);
-
-    cout << "AST read from file (" << filename << "): " << ast_input << endl;
     
     auto root = ast::deserialize(ast_input);
     auto result = ast::evaluate(*root, env);
@@ -135,8 +134,9 @@ int main(int argc, char** argv) {
         // ---------- build AST mode ----------
         // 1. get expression string
         string input;
-        if (argc == 3) input = read_file(argv[2]); // read from file
+        if (argc == 3) input = read_file(argv[2], true, "input expression file"); // read from file
         if (argc == 2) input = read_stdin(cin); // read from stdin
+        if (input.empty()) throw std::runtime_error("Could not read input expression (empty input)");
 
         // 2. build AST from input expr
         auto root = ast::parse_expression(input);
