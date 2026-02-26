@@ -12,17 +12,21 @@ make
 
 2. Run:
 
-- **When building AST**: you can choose to read the expression from a file or from standard input. If you choose to read from standard input, you can type the expression directly into the terminal and press Enter.
-- **When evaluating AST**: you need to provide the AST file that was generated in the previous step. The program will read the AST from the file, evaluate it, and print the output to the terminal.
+The program has two modes:
 
-| Build AST                                         | Evaluate AST                             |
-| ------------------------------------------------- | ---------------------------------------- |
-| `./program <ast-out-file> <expr-in-file>`         | `./program --eval <ast-file>`            |
-| `./program <ast-out-file> (read expr from stdin)` | `./program --eval <ast-file> <var-file>` |
+- **Build mode**: Parse an expression and generate an AST file
+- **Evaluation mode**: Read a previously generated AST file and evaluate it
 
-- **&lt;ast-out-file&gt;** : Output file - AST string representation. If the file already exists, it will be overwritten.
-- **&lt;expr-in-file&gt;** : Input file - read expression string. If the file does not exist, an error will occur.
-- **&lt;var-file&gt;** : Input file - read variable values. If the file does not exist, an error will occur. If no &lt;var-file&gt; is provided, it will assume there are no variables in the expression.
+|           | Build Mode                                    | Evaluation Mode                            |
+| --------- | --------------------------------------------- | ------------------------------------------ |
+| Templates | `./program <ast-file> <expr-file>`            | `./program --eval <ast-file>`              |
+|           | `./program <ast-file> (read expr from stdin)` | `./program --eval <ast-file> <var-file>`   |
+|           |                                               |                                            |
+| Example   | `./program ast.tree tests/sample1.in`         | `./program --eval ast.tree tests/vars.txt` |
+
+- **&lt;ast-file&gt;** : (Build mode) Output file containing the generated AST / (Eval mode) Input file containing the AST to evaluate
+- **&lt;expr-file&gt;** : Input file containing the expression to parse
+- **&lt;var-file&gt;** : Optional input file defining variable values
 
 ### Clean
 

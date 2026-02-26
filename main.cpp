@@ -103,8 +103,8 @@ void evaluate_AST(const char* filename, const char* vars_filename = NULL) {
 void print_usage(const char* program_name) {
     cerr << "Usage:" << endl << endl;
     cerr << "  " << "Build AST:" << endl;
-    cerr << "    " << program_name << " <ast-out-file> <expr-in-file>" << endl;
-    cerr << "    " << program_name << " <ast-out-file> (read expr from stdin)" << endl;
+    cerr << "    " << program_name << " <ast-file> <expr-file>" << endl;
+    cerr << "    " << program_name << " <ast-file> (read expr from stdin)" << endl;
     cerr << "  " << "Evaluate AST:" << endl;
     cerr << "    " << program_name << " --eval <ast-file>" << endl;
     cerr << "    " << program_name << " --eval <ast-file> <vars-file>" << endl;
