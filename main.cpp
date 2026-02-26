@@ -64,14 +64,21 @@ static VarMap read_vars_file(const char* filename) {
 
         auto eq = s.find('=');
         if (eq == string::npos) throw std::runtime_error("vars: expected 'name=value' but got: " + s);
-        if (s.find('=', eq + 1) != string::npos) throw std::runtime_error("vars: too many '=' in: " + s);
-
+        
         string name = s.substr(0, eq);
         string value_str = s.substr(eq + 1);
 
+        // valid name: all lowercase letters
         if (name.empty()) throw std::runtime_error("vars: empty name in line: " + s);
         for (char c : name) if (!(c >= 'a' && c <= 'z')) throw std::runtime_error("vars: invalid variable name: " + name);
 
+        // valid value: all digits
+        for (char c : value_str) {
+            // consecutive minuses not allowed, but single leading allowed (for unary minus)
+            if (c == '-' && strcmp(&c, &value_str[0])) continue;
+            if (!std::isdigit((unsigned char) c)) throw std::runtime_error("vars: invalid variable value: " + value_str);
+        }
+        
         if (value_str.empty()) throw std::runtime_error("vars: empty value in line: " + s);
 
         int64_t value = std::stoll(value_str);  // convert string into int64_t
