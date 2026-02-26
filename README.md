@@ -36,11 +36,7 @@ Remove .o files and the executable:
 make clean
 ```
 
-TODO--- klara skyldu stuff í README.md
-
-[x] What needs to be written in the terminal to compile and run the program, explaining how to run each of the two parts.
-
-[ ] What additional features were implemented above the base version, if any.
+## Additional features
 
 1. Whitespace insensitive (5%): ignore whitespace characters (spaces, tabs, newlines) in the input expression.
 2. Modern C++ Tree (5%): the AST is implemented like a tree (left and right children) with smart pointers (std::unique_ptr)
@@ -49,6 +45,26 @@ TODO--- klara skyldu stuff í README.md
 5. Variables (15%): allow reading variables from file, variable value has to be a valid integer
 6. AST optimisations (~10%): while building AST pre-calculate: 0 and 1 multiplication, 0 and 1 division , 0 addition and subtraction, double negation
 
-[ ] An explanation of the format you store the AST (Abstract Syntax Tree) in that the two versions read/write.
+## AST file format
 
-[ ] Anything else a student wishes to say. Put it here and not in the Canvas comments!
+AST is stored in a notation similar to Scheme/List format.
+
+Each internal node is written as:
+
+```
+(<operator> <left-subtree> <right-subtree>)
+```
+
+Unary minus is stored as:
+
+```
+(~ <subtree>)
+```
+
+Examples:
+
+```cpp
+(+ 3 4)  // represents 3 + 4
+(* (+ 3 4) 5)  // represents (3 + 4) * 5
+(~ 10) // represents -10
+```
