@@ -4,6 +4,7 @@
 #include <string> // string, stoll, etc
 #include <fstream> // file streams
 #include <unordered_map> // for variable environment
+#include <cstring> // for strcmp
 
 
 using std::cerr; // console error output
