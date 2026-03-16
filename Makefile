@@ -21,5 +21,12 @@ $(TARGET): $(OBJS)
 
 clean:
 	rm -f $(OBJS) $(TARGET)
+	
+
+tidy:
+
+	clang-tidy *.cpp \
+		--checks='misc-include-cleaner' \
+		-- $(CXXFLAGS)
 
 .PHONY: all clean info
